@@ -34,6 +34,7 @@ public class TicTacToe extends JFrame {
         board = new char[3][3];
 
         createButtons();
+        clearBoard();
     }
 
     public void createButtons() {
@@ -223,15 +224,19 @@ public class TicTacToe extends JFrame {
     }
 
     public void restart() {
-        for (int i = 0; i < board.length; i++) {
-            for (int j = 0; j < board.length; j++) {
-                board[i][j] = '?';
-                updateButton(i+1, j+1, "");
-            }
-        }
+        clearBoard();
 
         turn.setText("Player: " + currentPlayer);
         gameEnd = false;
+    }
+
+    public void clearBoard() {
+        for (int i = 0; i < board.length; i++) {
+            for (int j = 0; j < board.length; j++) {
+                board[i][j] = '?';
+                updateButton(i+1, j+1, " ");
+            }
+        }
     }
 
     public static void main(String[] args) {
