@@ -1,5 +1,4 @@
 import javax.swing.*;
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class TicTacToe extends JFrame {
@@ -16,12 +15,14 @@ public class TicTacToe extends JFrame {
     private JButton r3c2;
     private JButton r3c3;
     private JButton restart;
+    private JButton infoAdvanced;
+    private JCheckBox advanced;
 
     private final char[][] board;
+    private final int[] firstMove;
     private char currentPlayer = 'X';
     private boolean gameEnd = false;
-    private int scoreX = 0;
-    private int scoreO = 0;
+    private int scoreX = 0, scoreO = 0, moveCount = 0;
 
     public TicTacToe() {
         setContentPane(mainPanel);
@@ -32,66 +33,23 @@ public class TicTacToe extends JFrame {
         setVisible(true);
 
         board = new char[3][3];
+        firstMove = new int[2];
 
         createButtons();
         clearBoard();
     }
 
     public void createButtons() {
-        ActionListener listenerR1c1 = new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                play(1, 1);
-            }
-        };
-        ActionListener listenerR1c2 = new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                play(1, 2);
-            }
-        };
-        ActionListener listenerR1c3 = new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                play(1, 3);
-            }
-        };
-        ActionListener listenerR2c1 = new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                play(2, 1);
-            }
-        };
-        ActionListener listenerR2c2 = new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                play(2, 2);
-            }
-        };
-        ActionListener listenerR2c3 = new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                play(2, 3);
-            }
-        };
-        ActionListener listenerR3c1 = new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                play(3, 1);
-            }
-        };
-        ActionListener listenerR3c2 = new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                play(3, 2);
-            }
-        };
-        ActionListener listenerR3c3 = new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                play(3, 3);
-            }
-        };
+        ActionListener listenerR1c1 = e -> play(1, 1);
+        ActionListener listenerR1c2 = e -> play(1, 2);
+        ActionListener listenerR1c3 = e -> play(1, 3);
+        ActionListener listenerR2c1 = e -> play(2, 1);
+        ActionListener listenerR2c2 = e -> play(2, 2);
+        ActionListener listenerR2c3 = e -> play(2, 3);
+        ActionListener listenerR3c1 = e -> play(3, 1);
+        ActionListener listenerR3c2 = e -> play(3, 2);
+        ActionListener listenerR3c3 = e -> play(3, 3);
+
         r1c1.addActionListener(listenerR1c1);
         r1c2.addActionListener(listenerR1c2);
         r1c3.addActionListener(listenerR1c3);
@@ -102,10 +60,17 @@ public class TicTacToe extends JFrame {
         r3c2.addActionListener(listenerR3c2);
         r3c3.addActionListener(listenerR3c3);
 
-        restart.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                restart();
+        restart.addActionListener(e -> restart());
+        infoAdvanced.addActionListener(e -> JOptionPane.showMessageDialog(mainPanel, "Advanced mode:\n- After 3 obtained spots your first one is erased\n- A draw is not possible"));
+
+        advanced.addActionListener(e -> {
+            if (moveCount != 0) {
+                advanced.setSelected(!advanced.isSelected());
+                int choice = JOptionPane.showConfirmDialog(mainPanel, "Advanced mode can only be changed when starting a new game\nDo you want to restart the game?");
+                if (choice == 0) {
+                    advanced.setSelected(!advanced.isSelected());
+                    restart();
+                }
             }
         });
     }
@@ -133,6 +98,23 @@ public class TicTacToe extends JFrame {
             } else {
                 currentPlayer = 'X';
             }
+
+            moveCount++;
+            if (moveCount == 1) {
+                firstMove[0] = r;
+                firstMove[1] = c;
+            } else {
+                if (moveCount >= 6) {
+                    updateButton(firstMove[0]+1, firstMove[1]+1, "("+board[firstMove[0]][firstMove[1]]+")");
+                    int[] toBeDeleted = firstMove.clone();
+                    firstMove[0] = r;
+                    firstMove[1] = c;
+                    if (moveCount > 6) {
+                        updateButton(toBeDeleted[0]+1, toBeDeleted[1]+1, " ");
+                    }
+                }
+            }
+
             turn.setText("Player: " + currentPlayer);
             return true;
         }
@@ -170,10 +152,8 @@ public class TicTacToe extends JFrame {
     }
 
     public boolean checkWinner() {
-        boolean check = false;
-        if (equal3(board[0][0], board[1][1], board[2][2]) || equal3(board[2][0], board[1][1], board[0][2])) {
-            check = true;
-        }
+        boolean check = equal3(board[0][0], board[1][1], board[2][2]) || equal3(board[2][0], board[1][1], board[0][2]);
+
         for (int i = 0; i < board.length; i++) {
             if (equal3(board[i][0], board[i][1], board[i][2]) || equal3(board[0][i], board[1][i], board[2][i])) {
                 check = true;
@@ -182,9 +162,9 @@ public class TicTacToe extends JFrame {
 
         if (!check) {
             boolean full = true;
-            for (int i = 0; i < board.length; i++) {
+            for (char[] chars : board) {
                 for (int j = 0; j < board.length; j++) {
-                    if (!(board[i][j] == 'X' || board[i][j] == 'O')) {
+                    if (!(chars[j] == 'X' || chars[j] == 'O')) {
                         full = false;
                         break;
                     }
@@ -215,7 +195,7 @@ public class TicTacToe extends JFrame {
                 winner = 'X';
                 scoreX += 1;
             }
-            turn.setText("Player: " + winner + " is the Winner!!!");
+            turn.setText("Player: " + winner + " is the Winner!!! It took " + moveCount + " moves");
 
             score.setText("X: " + scoreX + ", O: " + scoreO);
         }
@@ -227,6 +207,7 @@ public class TicTacToe extends JFrame {
         clearBoard();
 
         turn.setText("Player: " + currentPlayer);
+        moveCount = 0;
         gameEnd = false;
     }
 
