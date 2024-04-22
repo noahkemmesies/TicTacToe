@@ -1,5 +1,6 @@
 import javax.swing.*;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 
 public class TicTacToe extends JFrame {
     private JPanel mainPanel;
@@ -19,10 +20,10 @@ public class TicTacToe extends JFrame {
     private JCheckBox advanced;
 
     private final char[][] board;
-    private final int[] firstMove;
+    private final ArrayList<int[]> moves;
     private char currentPlayer = 'X';
     private boolean gameEnd = false;
-    private int scoreX = 0, scoreO = 0, moveCount = 0;
+    private int scoreX = 0, scoreO = 0;
 
     public TicTacToe() {
         setContentPane(mainPanel);
@@ -33,7 +34,7 @@ public class TicTacToe extends JFrame {
         setVisible(true);
 
         board = new char[3][3];
-        firstMove = new int[2];
+        moves = new ArrayList<>();
 
         createButtons();
         clearBoard();
@@ -64,7 +65,7 @@ public class TicTacToe extends JFrame {
         infoAdvanced.addActionListener(e -> JOptionPane.showMessageDialog(mainPanel, "Advanced mode:\n- After 3 obtained spots your first one is erased\n- A draw is not possible"));
 
         advanced.addActionListener(e -> {
-            if (moveCount != 0) {
+            if (moves.size() != 0) {
                 advanced.setSelected(!advanced.isSelected());
                 int choice = JOptionPane.showConfirmDialog(mainPanel, "Advanced mode can only be changed when starting a new game\nDo you want to restart the game?");
                 if (choice == 0) {
@@ -99,24 +100,33 @@ public class TicTacToe extends JFrame {
                 currentPlayer = 'X';
             }
 
-            moveCount++;
-            if (moveCount == 1) {
-                firstMove[0] = r;
-                firstMove[1] = c;
-            } else {
-                if (moveCount >= 6) {
-                    updateButton(firstMove[0]+1, firstMove[1]+1, "("+board[firstMove[0]][firstMove[1]]+")");
-                    int[] toBeDeleted = firstMove.clone();
-                    firstMove[0] = r;
-                    firstMove[1] = c;
-                    if (moveCount > 6) {
-                        updateButton(toBeDeleted[0]+1, toBeDeleted[1]+1, " ");
-                    }
+
+            if (advanced.isSelected()) {
+                System.out.println("s: " + moves.size());
+                if (moves.size() >= 5) {
+                    System.out.println("m1");
+                    int[] move = moves.get(moves.size() - 5);
+
+                    updateButton(move[0] + 1, move[1] + 1, "(" + board[move[0]][move[1]] + ")");
+                }
+                if (moves.size() >= 6) {
+                    int[] move = moves.get(moves.size() - 6);
+
+                    board[move[0]][move[1]] = '?';
+                    updateButton(move[0] + 1, move[1] + 1, " ");
                 }
             }
 
+            moves.add(new int[] {r, c});
             turn.setText("Player: " + currentPlayer);
             return true;
+        }
+        return false;
+    }
+
+    public boolean revertMove() { //button and button for cheats with info
+        if (moves.size() != 0) {
+            return  true;
         }
         return false;
     }
@@ -195,7 +205,7 @@ public class TicTacToe extends JFrame {
                 winner = 'X';
                 scoreX += 1;
             }
-            turn.setText("Player: " + winner + " is the Winner!!! It took " + moveCount + " moves");
+            turn.setText("Player: " + winner + " is the Winner!!! It took " + moves.size() + " moves");
 
             score.setText("X: " + scoreX + ", O: " + scoreO);
         }
@@ -207,7 +217,7 @@ public class TicTacToe extends JFrame {
         clearBoard();
 
         turn.setText("Player: " + currentPlayer);
-        moveCount = 0;
+        moves.clear();
         gameEnd = false;
     }
 
